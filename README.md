@@ -1,25 +1,20 @@
 # Quick Description
 
-F erotiq
-D iscord
-U ltimate
-C lient
-
 Organize your discord bot quickly and neatly with this package.
 
 # Installation
 
 npm:
-`npm i fduc`
+`npm i fero-client`
 
 yarn:
-`yarn add fduc`
+`yarn add fero-client`
 
 # Utilization
 
 Client:
 ```js
-const { Client } = require("fduc");
+const { Client } = require("fero-client");
 const path = require("path");
 const Discord = require("discord.js");
 
@@ -57,7 +52,7 @@ const client = Client(Discord, config, modules, paths);
 Command:
 ```js
 // New command file in the commands folder
-const { Command } = require("fduc");
+const { Command } = require("fero-client");
 module.exports = new Command({
     name: "ping",
     desc: "Shows bot ping",
@@ -73,7 +68,7 @@ module.exports = new Command({
 Event:
 ```js
 // New event file in the events folder
-const { Event } = require("fduc");
+const { Event } = require("fero-client");
 module.exports = new Event({
     name: "message",
     async run(client, message) {
