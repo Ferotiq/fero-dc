@@ -54,7 +54,7 @@ module.exports = class FeroDC extends Client {
                 }
             });
 
-        fs.readdirSync(this.cmdsPath).filter(file => path.extname(file) == ".js").forEach(file => {
+        fs.readdirSync(this.paths.cmds).filter(file => path.extname(file) == ".js").forEach(file => {
             const fileCommand = require(`${this.paths.cmds}/${file}`);
             this.commands.set(fileCommand.name, fileCommand);
             if (this.clientOptions.cmdLoadedMsg) {
@@ -71,7 +71,7 @@ module.exports = class FeroDC extends Client {
             });
         });
 
-        fs.readdirSync(this.eventsPath).filter(file => path.extname(file) == ".js").forEach(file => {
+        fs.readdirSync(this.paths.events).filter(file => path.extname(file) == ".js").forEach(file => {
             const fileEvent = require(`${this.paths.events}/${file}`);
             this.on(fileEvent.name, fileEvent.run.bind(null, this));
             if (this.clientOptions.eventLoadedMsg) {
