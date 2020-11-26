@@ -1,21 +1,22 @@
 {
-  "name": "fero-client",
+  "name": "fec",
   "version": "1.0.0",
   "description": "Ultimate Classes and Structures to organize the client, commands, events, and more for your discord bot.",
-  "main": "src/fero-client.js",
-  "keywords": [
-    "ferotiq"
-  ],
-  "devDependencies": {},
+  "main": "src/fec.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Ferotiq/fero-client.git"
+    "url": "git+https://github.com/Ferotiq/fec.git"
   },
   "author": "Ferotiq",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/Ferotiq/fero-client/issues"
+    "url": "https://github.com/Ferotiq/fec/issues"
   },
-  "homepage": "https://github.com/Ferotiq/fero-client#readme",
-  "dependencies": {}
+  "homepage": "https://github.com/Ferotiq/fec#readme",
+  "devDependencies": {
+    "discord.js": "^12.5.1"
+  }
 }

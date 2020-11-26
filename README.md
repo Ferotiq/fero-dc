@@ -1,22 +1,23 @@
 # Quick Description
 
+Fec is short for Ferotiq Client
+
 Organize your discord bot quickly and neatly with this package.
 
 # Installation
 
 npm:
-`npm i fero-client`
+`npm i fec`
 
 yarn:
-`yarn add fero-client`
+`yarn add fec`
 
 # Utilization
 
 Client:
 ```js
-const { Client } = require("fero-client");
+const { Client } = require("fec");
 const path = require("path");
-const Discord = require("discord.js");
 
 // Config that stores your bot's token and prefix (optional)
 const config = {
@@ -35,24 +36,19 @@ const modules = {
         // etc
     }
 
+// The paths to your Command and Event files.
 const paths = {
         cmds: path.join(__dirname, "Commands"),
         events: path.join(__dirname, "Events")
     }
 
-/* This is a function that makes a class and is not a direct class,
-need to pass in Discord because of npm publish issues
-related to dependencies
-restricting me from publishing this project.
-I will fix asap.
-*/
-const client = Client(Discord, config, modules, paths);
+const client = new Client(config, modules, paths);
 ```
 
 Command:
 ```js
 // New command file in the commands folder
-const { Command } = require("fero-client");
+const { Command } = require("fec");
 module.exports = new Command({
     name: "ping",
     desc: "Shows bot ping",
@@ -68,7 +64,7 @@ module.exports = new Command({
 Event:
 ```js
 // New event file in the events folder
-const { Event } = require("fero-client");
+const { Event } = require("fec");
 module.exports = new Event({
     name: "message",
     async run(client, message) {
