@@ -29,7 +29,7 @@ module.exports = class FeroDC extends Client {
 
         if (!fs.existsSync(this.cmdsPath)) {
             try {
-                fs.mkdir(cmdsPath);
+                fs.mkdir(this.cmdsPath);
             } catch (err) {
                 console.error(`Fero-Dc Error: Could not find ${cmdsPath} nor make a directory in it's place. ${err}`);
             }
@@ -37,19 +37,19 @@ module.exports = class FeroDC extends Client {
 
         if (!fs.existsSync(this.eventsPath)) {
             try {
-                fs.mkdir(eventsPath);
+                fs.mkdir(this.eventsPath);
             } catch (err) {
                 console.error(`Fero-Dc Error: Could not find ${eventsPath} nor make a directory in it's place. ${err}`);
             }
         }
 
         fs.readdirSync(this.cmdsPath).filter(file => path.extname(file) == ".js").forEach(file => {
-            const fileCommand = require(`${cmdsPath}/${file}`);
+            const fileCommand = require(`${this.cmdsPath}/${file}`);
             this.commands.set(fileCommand.name, fileCommand);
         });
 
         fs.readdirSync(this.eventsPath).filter(file => path.extname(file) == ".js").forEach(file => {
-            const fileEvent = require(`${eventsPath}/${file}`);
+            const fileEvent = require(`${this.eventsPath}/${file}`);
             this.on(fileEvent.name, fileEvent.run.bind(null, this));
         });
 
