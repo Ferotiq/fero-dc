@@ -63,7 +63,7 @@ module.exports = class FeroDC extends Client {
             const argsPath = path.join(this.paths.args, file.substring(0, file.indexOf(".js")));
             fs.readdirSync(argsPath).filter(file => path.extname(file) == ".js").forEach(arg => {
                 const fileArgument = require(`${argsPath}/${arg}`);
-                fileCommand.arguments.push(fileArgument.name);
+                fileCommand.args.push(fileArgument.name);
                 this.arguments.set(fileArgument.name, fileArgument);
                 if (this.clientOptions.cmdLoadedMsg) {
                     console.log(`Argument "${fileArgument.name.bold}" loaded for command "${fileCommand.name.bold}".`.green)
