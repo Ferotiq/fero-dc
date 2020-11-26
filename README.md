@@ -1,22 +1,22 @@
 # Quick Description
 
-Fec is short for Ferotiq Client
+fero-dc is short for Ferotiq Client
 
 Organize your discord bot quickly and neatly with this package.
 
 # Installation
 
 npm:
-`npm i fec`
+`npm i fero-dc`
 
 yarn:
-`yarn add fec`
+`yarn add fero-dc`
 
 # Utilization
 
 Client:
 ```js
-const { Client } = require("fec");
+const { Client } = require("fero-dc");
 const path = require("path");
 
 // Config that stores your bot's token and prefix (optional)
@@ -48,7 +48,7 @@ const client = new Client(config, modules, paths);
 Command:
 ```js
 // New command file in the commands folder
-const { Command } = require("fec");
+const { Command } = require("fero-dc");
 module.exports = new Command({
     name: "ping",
     desc: "Shows bot ping",
@@ -64,7 +64,7 @@ module.exports = new Command({
 Event:
 ```js
 // New event file in the events folder
-const { Event } = require("fec");
+const { Event } = require("fero-dc");
 module.exports = new Event({
     name: "message",
     async run(client, message) {

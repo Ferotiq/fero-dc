@@ -9,7 +9,7 @@ const {
  * @extends {Client}
  * @description A built-on version of the standard Discord.js Client that has a built in command handler and event handler.
  */
-module.exports = class FEC extends Client {
+module.exports = class FeroDC extends Client {
 
     /**
      * @param {*} config - Stores bot token and prefix
@@ -31,7 +31,7 @@ module.exports = class FEC extends Client {
             try {
                 fs.mkdir(cmdsPath);
             } catch (err) {
-                console.error(`FEC Error: Could not find ${cmdsPath} nor make a directory in it's place. ${err}`);
+                console.error(`Fero-Dc Error: Could not find ${cmdsPath} nor make a directory in it's place. ${err}`);
             }
         }
 
@@ -39,7 +39,7 @@ module.exports = class FEC extends Client {
             try {
                 fs.mkdir(eventsPath);
             } catch (err) {
-                console.error(`FEC Error: Could not find ${eventsPath} nor make a directory in it's place. ${err}`);
+                console.error(`Fero-Dc Error: Could not find ${eventsPath} nor make a directory in it's place. ${err}`);
             }
         }
 
