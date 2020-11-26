@@ -1,6 +1,6 @@
 {
   "name": "fero-dc",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "description": "Ultimate Classes and Structures to organize the client, commands, events, and more for your discord bot.",
   "main": "src/fero-dc.js",
   "repository": {
@@ -13,7 +13,8 @@
     "url": "https://github.com/Ferotiq/fero-dc/issues"
   },
   "homepage": "https://github.com/Ferotiq/fero-dc#readme",
-  "devDependencies": {
+  "dependencies": {
+    "colors": "^1.4.0",
     "discord.js": "^12.5.1"
   }
 }

@@ -1,16 +1,16 @@
 # Quick Description
 
-fero-dc is short for Ferotiq Client
+fero-dc is short for Ferotiq Discord Client
 
 Organize your discord bot quickly and neatly with this package.
 
 # Installation
 
 npm:
-`npm i fero-dc`
+`npm i fero-dc --save`
 
 yarn:
-`yarn add fero-dc`
+`yarn add fero-dc --save`
 
 # Utilization
 
@@ -25,10 +25,9 @@ const config = {
         prefix: "botprefix"
     }
 
-// Anything you want to store (client.fs | client.discord | client.ms | client.messages)
+// Anything you want to store (client.fs | client.ms | client.messages)
 const modules = {
         fs: require("fs"),
-        discord: Discord,
         ms: require("ms"),
         messages: {
             permission: "You do not have the correct permissions to use that command!"
@@ -69,6 +68,22 @@ module.exports = new Event({
     name: "message",
     async run(client, message) {
         message.reply("Hello!");
+    }
+});
+```
+
+Argument:
+```js
+// New argument file in the arguments folder
+const { Argument } = require("fero-dc");
+module.exports = new Argument({
+    name: "real",
+    desc: "Shows real websocket bot ping",
+    aliases: ["real", "r"],
+    parent: "ping",
+    permission: "SEND_MESSAGES",
+    async run(message, args, client) {
+        return message.reply(new client.discord.WebsocketManager(client).ping);
     }
 });
 ```
