@@ -5,16 +5,17 @@ module.exports = class Command {
      * * name - the name of the command
      * * desc - the description of the command
      * * aliases - the aliases or shortened names of the command
+     * * arguments - the arguments of the command
      * * permission - the permission needed to run the command
      * * run - the function that will run once the command is called
-     * @param {{name: String, desc: String, aliases: String[], permission: String, run: Function}} options 
+     * @param {{name: String, desc: String, aliases: String[], arguments: Array, permission: String, run: Function}} options 
      */
     constructor(options = {}) {
         
         this.name = options.name;
         this.desc = options.desc;
         this.aliases = options.aliases;
-        this.argumnets = [];
+        this.arguments = [];
         this.permission = options.permission;
         this.run = options.run;
         
