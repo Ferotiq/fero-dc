@@ -38,10 +38,18 @@ const modules = {
 // The paths to your Command and Event files.
 const paths = {
         cmds: path.join(__dirname, "Commands"),
-        events: path.join(__dirname, "Events")
+        events: path.join(__dirname, "Events"),
+        args: path.join(__dirname, "Arguments")
     }
 
-const client = new Client(config, modules, paths);
+// Optional values for console messages
+const bools = {
+    cmdLoadedMsg: true,
+    eventLoadedMsg: true,
+    argLoadedMsg: true
+}
+
+const client = new Client(config, modules, paths, bools);
 ```
 
 Command:

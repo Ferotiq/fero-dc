@@ -75,7 +75,7 @@ module.exports = class FeroDC extends Client {
             const fileEvent = require(`${this.paths.events}/${file}`);
             this.on(fileEvent.name, fileEvent.run.bind(null, this));
             if (this.clientOptions.eventLoadedMsg) {
-                console.log(`Command "${fileCommand.name.bold}" loaded.`.red)
+                console.log(`Event "${fileEvent.name.bold}" loaded.`.red)
             }
         });
 
