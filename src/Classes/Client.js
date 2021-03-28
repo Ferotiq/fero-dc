@@ -134,13 +134,14 @@ module.exports = class FeroDC extends Client {
             });
         });
 
+        this.removeAllListeners();
+
         fs.readdirSync(this.paths.events).filter(file => path.extname(file) == ".js").forEach(file => {
-            this.removeAllListeners();
             eventsCount++;
             const fileEvent = require(`${this.paths.events}/${file}`);
             if (!(fileEvent instanceof Event)) return;
             if (fileEvent.name == "interactionCreate") {
-                const e = this.ws.on("INTERACTION_CREATE", fileEvent.run.bind(null, this));
+                this.ws.on("INTERACTION_CREATE", fileEvent.run.bind(null, this));
             } else {
                 this.on(fileEvent.name, fileEvent.run.bind(null, this));
             }
@@ -198,45 +199,3 @@ module.exports = class FeroDC extends Client {
     }
 
 }
-
-// const filter = cmd.permissions.filter(async permission => {
-
-//     if (typeof (permission) == "string") {
-//         const f = (this.users.fetch(permission, true)).then(user => user.id == member.id).catch(reason => {
-//             if (member.guild.roles.cache.has(permission)) {
-//                 if (member.id == member.guild.ownerID) return true;
-//                 if (admin) return true;
-//                 if (member.roles.cache.has(permission)) return true;
-//                 else return false;
-//             } else if (member.hasPermission(permission, {
-//                     checkAdmin: true,
-//                     checkOwner: true
-//                 })) return true;
-//             else {
-//                 if (dataArray.includes(permission)) {
-//                     const roles = data[permission];
-//                     const filteredRoles = roles.filter(role => member.roles.cache.has(role));
-//                     if (filteredRoles.length > 0) return true;
-//                 }
-//             }
-//         });
-
-//         const bool = await f ? true : false;
-
-//         return bool;
-
-//     } else {
-
-//         if (permission instanceof BitField || permission instanceof Permissions) {
-//             if (member.hasPermission(new Permissions(permission), {
-//                     checkAdmin: true,
-//                     checkOwner: true
-//                 })) return true;
-//         }
-
-//         if (member.hasPermission(permission, {
-//                 checkAdmin: true,
-//                 checkOwner: true
-//             })) return true;
-//     }
-// });
