@@ -20,8 +20,12 @@ module.exports = class Command {
         this.args = [];
         this.permissions = options.permissions;
         this.usage = options.usage || "";
-        this.slashCommand = options.slashCommand;
-        this.run = options.run;
+        this.slashCommand = options.slashCommand || {
+            bool: false,
+            options: []
+        };
+        const noFunctionSet = () => {};
+        this.run = options.run || noFunctionSet;
 
     }
 

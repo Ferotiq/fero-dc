@@ -16,8 +16,8 @@ module.exports = class InteractionMessage {
         this.guild = client.guilds.cache.get(interaction.guild_id);
         this.channel = this.guild.channels.cache.get(interaction.channel_id);
         this.user = interaction.member.user;
-        this.member = interaction.member;
-        this.interactionMember = new InteractionMember(client, this.member, this.guild);
+        this.rawMember = interaction.member;
+        this.member = new InteractionMember(client, this.rawMember, this.guild);
     }
 
     /**
