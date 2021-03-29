@@ -11,13 +11,14 @@ module.exports = class InteractionMessage {
         this.interaction = interaction;
         this.command = interaction.data.name;
         this.commandID = interaction.data.id;
-        this.commandOptions = interaction.data.options;
+        this.commandOptions = interaction.data.options ?? new Array();
         this.id = interaction.id;
         this.guild = client.guilds.cache.get(interaction.guild_id);
         this.channel = this.guild.channels.cache.get(interaction.channel_id);
         this.user = interaction.member.user;
         this.rawMember = interaction.member;
         this.member = new InteractionMember(client, this.rawMember, this.guild);
+        this.content = `/${this.command} ${this.commandOptions.map(v => v.value).join(" ")}`;
     }
 
     /**
