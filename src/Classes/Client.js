@@ -181,7 +181,7 @@ module.exports = class FeroDC extends Client {
         const hasPermissionsPermissions = (await Promise.all(permissionsPermissionsArray.map(v => member.hasPermission(v)))).includes(true);
 
         if (!permissionsRoleAliasesArray.length &&
-            !permissionsPermissionsArray &&
+            !permissionsPermissionsArray.length &&
             !hasPermissionsUsers) return false;
 
         if (owner) return true;
