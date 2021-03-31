@@ -1,6 +1,6 @@
 {
   "name": "fero-dc",
-  "version": "1.2.5",
+  "version": "1.2.8",
   "description": "Ultimate classes and methods to organize the client, commands, events, and more for your discord bot.",
   "main": "src/index.js",
   "repository": {
