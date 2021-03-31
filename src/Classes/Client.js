@@ -98,26 +98,29 @@ module.exports = class FeroDC extends Client {
             commandsCount++;
             const fileCommand = require(`${this.paths.cmds}/${file}`);
             if (!(fileCommand instanceof Command)) return;
-            if (fileCommand.slashCommand.bool) fileCommand.aliases.forEach(async alias => {
+            if (fileCommand.slashCommand.bool) fileCommand.aliases.forEach(alias => {
                 const cmd = slashCommands instanceof Array ? slashCommands.find(cmd => cmd.name.toLowerCase() == alias.toLowerCase()) : slashCommands.name.toLowerCase() == alias.toLowerCase();
                 if (cmd) {
                     if (fileCommand.desc != cmd.description) {
-                        await this.interactionsClient.editCommand({
-                            name: alias,
-                            description: fileCommand.desc,
-                            options: fileCommand.slashCommand.options
-                        }, cmd.id);
-                        console.log(`Edited SlashCommand ${cmd.name.bold} (${cmd.id.bold})`.blue);
+                        this.interactionsClient.editCommand({
+                                name: alias,
+                                description: fileCommand.desc,
+                                options: fileCommand.slashCommand.options
+                            }, cmd.id)
+                            .then(result => console.log(`Edited SlashCommand ${cmd.name.bold} (${cmd.id.bold})`.blue))
+                            .catch(err => console.log(`Something went wrong trying to edit SlashCommand ${cmd.name.bold} (${cmd.id.bold})`.red));
+
                     } else {
                         console.log(`Did not change SlashCommand ${cmd.name.bold} (${cmd.id.bold})`.blue);
                     }
                 } else {
-                    const i = await this.interactionsClient.createCommand({
-                        name: alias,
-                        description: fileCommand.desc,
-                        options: fileCommand.slashCommand.options
-                    });
-                    console.log(`Added SlashCommand ${i.name.bold} (${i.id.bold})`.blue);
+                    this.interactionsClient.createCommand({
+                            name: alias,
+                            description: fileCommand.desc,
+                            options: fileCommand.slashCommand.options
+                        })
+                        .then(result => console.log(`Added SlashCommand ${result.name.bold} (${result.id.bold})`.blue))
+                        .catch(err => console.log(`Something went wrong trying to add SlashCommand ${alias.bold}`.red));
                 }
             });
             this.commands.set(fileCommand.name, fileCommand);
@@ -168,25 +171,16 @@ module.exports = class FeroDC extends Client {
 
         const dataArray = Object.keys(data);
 
-        await member.guild.members.fetch({
-            cache: true,
-            force: true
-        });
-
-        const permissionsUsersArray = cmd.permissions.filter(c => this.users.cache.get(c));
-        const permissionsRolesArray = cmd.permissions.filter(c => member.guild.roles.resolve(c));
         const permissionsRoleAliasesArray = cmd.permissions.filter(c => dataArray.includes(c));
         const permissionsPermissionsArray = cmd.permissions.filter(c => c instanceof Permissions || c instanceof BitField || Permissions.FLAGS[c]);
 
         const owner = member.id == member.guild.ownerID;
-        const hasPermissionsUsers = permissionsUsersArray.includes(member.id);
-        const hasPermissionsRoles = permissionsRolesArray.find(role => member.roles.cache.get(role)) ? true : false;
+        const hasPermissionsUsers = cmd.permissions.includes(member.id);
+        const hasPermissionsRoles = cmd.permissions.find(role => member.roles.cache.get(role)) ? true : false;
         const hasPermissionsRoleAliases = permissionsRoleAliasesArray.map(v => data[v]).find(sf => sf.includes(member.id) || sf.find(r => member.roles.cache.has(r))) ? true : false;
         const hasPermissionsPermissions = (await Promise.all(permissionsPermissionsArray.map(v => member.hasPermission(v)))).includes(true);
 
-        if (permissionsUsersArray.length > 0 &&
-            !permissionsRolesArray.length &&
-            !permissionsRoleAliasesArray.length &&
+        if (!permissionsRoleAliasesArray.length &&
             !permissionsPermissionsArray &&
             !hasPermissionsUsers) return false;
 
