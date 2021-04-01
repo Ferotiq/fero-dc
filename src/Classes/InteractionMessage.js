@@ -1,6 +1,6 @@
 const Discord = require("discord.js"),
-    InteractionMember = require("./InteractionMember.js")/*,*/;
-    // fs = require("fs");
+    InteractionMember = require("./InteractionMember.js") /*,*/ ;
+// fs = require("fs");
 
 module.exports = class InteractionMessage {
 
@@ -25,11 +25,11 @@ module.exports = class InteractionMessage {
         this.args = [this.command];
         this.args = this.args.concat(this.commandOptions.map(v => {
             if (v.value) return v.value;
-            else if (v.options) {
+            else if (v.options || v.type == 1 || v.type == 2) {
                 this.args.push(v.name);
-                v.options.forEach(o => this.args.push(o.value));
+                if (v.options) v.options.forEach(o => this.args.push(o.type == 1 ? o.name : o.value));
             } else return "undefined";
-        }).join(" "));
+        }).join(" ").split(" "));
         if (this.args[this.args.length - 1] == "") this.args.pop();
         this.content = `/${this.args.join(" ")}`;
         this.subCommands = new Array();
