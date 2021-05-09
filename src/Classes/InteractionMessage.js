@@ -1,27 +1,37 @@
 const Discord = require("discord.js"),
-    InteractionMember = require("./InteractionMember.js") /*,*/ ;
-// fs = require("fs");
+    Client = require("./Client.js");
 
 module.exports = class InteractionMessage {
 
     /**
-     * @param {Discord.Client} client 
+     * @type {Discord.User}
+     */
+    author;
+    /**
+     * @type {Discord.GuildMember}
+     */
+    member;
+
+    /**
+     * @param {Client} client 
      */
     constructor(client, interaction) {
-        // fs.writeFileSync("./v.json", JSON.stringify(interaction), err => {
-        //     if (err) console.log(err)
-        // });
+        this.createdTimestamp = Date.now();
+        this.createdAt = Date(this.createdTimestamp);
         this.client = client;
+        this.isInteraction = true;
         this.interaction = interaction;
         this.command = interaction.data.name;
         this.commandID = interaction.data.id;
         this.commandOptions = interaction.data.options ?? new Array();
         this.id = interaction.id;
         this.guild = client.guilds.cache.get(interaction.guild_id);
-        this.channel = this.guild.channels.cache.get(interaction.channel_id);
-        this.author = interaction.member.user;
+        /**
+         * @type {Discord.TextChannel | Discord.DMChannel}
+         */
+        this.channel = this.client.channels.cache.get(interaction.channel_id);
+        this.rawAuthor = interaction.member.user;
         this.rawMember = interaction.member;
-        this.member = new InteractionMember(client, this.rawMember, this.guild);
         this.args = [this.command];
         this.args = this.args.concat(this.commandOptions.map(v => {
             if (v.value) return v.value;
@@ -80,14 +90,15 @@ module.exports = class InteractionMessage {
         }
 
         /**
-         * @type {{everyone: Boolean, users: Discord.Collection<string, Discord.User>, roles: Discord.Collection<string, Discord.Role>, channels: Discord.Collection<string, Discord.TextChannel>}}
+         * @type {{everyone: Boolean, guild: Discord.Guild, users: Discord.Collection<string, Discord.User>, roles: Discord.Collection<string, Discord.Role>, members: Discord.Collection<string, Discord.GuildMember>, channels: Discord.Collection<string, Discord.TextChannel>}}
          */
         this.mentions = {
             everyone: false,
-            users: new Discord.Collection(Object.entries(this.resolved.users)),
-            roles: new Discord.Collection(Object.entries(this.resolved.roles)),
-            members: new Discord.Collection(Object.entries(this.resolved.users).map(v => [v, this.guild.member(v[0])])),
-            channels: new Discord.Collection(Object.entries(this.resolved.channels))
+            guild: this.guild,
+            users: new Discord.Collection(this.resolved.users.map(v => [v.id, v])),
+            roles: new Discord.Collection(this.resolved.roles.map(v => [v.id, v])),
+            members: new Discord.Collection(this.resolved.users.map(v => [v.id, this.guild.member(v.id)])),
+            channels: new Discord.Collection(this.resolved.channels.map(v => [v.id, v]))
         }
 
     }
@@ -107,7 +118,7 @@ module.exports = class InteractionMessage {
         } else {
             apiMessage = Discord.APIMessage.create(this, content, options).resolveData();
             if (Array.isArray(apiMessage.data.content)) {
-                return Promise.all(apiMessage.split().map(this.send.bind(this.interaction)));
+                return Promise.all(apiMessage.split().map(this.reply.bind(this.interaction)));
             }
         }
 
@@ -116,18 +127,37 @@ module.exports = class InteractionMessage {
             files
         } = await apiMessage.resolveFiles();
 
-        const message = this.client.api.interactions(this.interaction.id, this.interaction.token).callback.post({
-            data: {
-                data,
-                type,
-                files
-            }
+        try {
+            this.client.api.interactions(this.interaction.id, this.interaction.token).callback.post({
+                data: {
+                    data,
+                    type,
+                    files
+                }
+            });
+            return this.interaction.token;
+        } catch {
+            const message = await this.channel.send(`${this.author}, ${data.content}`);
+            return message; 
+        };
+
+    }
+
+    async fetchMember() {
+        await this.fetchAuthor();
+        const member = await this.guild.members.fetch({
+            force: true,
+            cache: true,
+            user: this.author.id
         });
+        this.member = member;
+        return this;
+    }
 
-        await message.then(d => this.client.actions.MessageCreate.handle(d).message);
-
-        return await message;
-
+    async fetchAuthor() {
+        const author = await this.client.users.fetch(this.rawAuthor.id, true, true);
+        this.author = author;
+        return this;
     }
 
 }

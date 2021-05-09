@@ -4,15 +4,25 @@ fero-dc is short for Ferotiq Discord Client
 
 Organize your discord bot quickly and neatly with this package.
 
-Now with slash commands!
+# Features
+
+- Command Handler
+- Subcommand Handler
+- Event Handler
+- Slash Commands
+- Built-in Help Command
+- Parameter Conversions
+- Complex Permission Checker
+- Debug Logger
+- More coming soon!
 
 # Installation
 
 npm:
-`npm i fero-dc --save`
+`npm i --save fero-dc`
 
 yarn:
-`yarn add fero-dc --save`
+`yarn add --save fero-dc`
 
 # Utilization
 
@@ -27,6 +37,23 @@ const config = {
         prefix: "botprefix"
     }
 
+// The paths to your Command, Subcommand, and Event files.
+const paths = {
+        cmds: path.join(__dirname, "Commands"),
+        events: path.join(__dirname, "Events"),
+        subs: path.join(__dirname, "Subcommands")
+    }
+
+// Optional values for other features
+const bools = {
+    cmdLoadedMsg: true,
+    eventLoadedMsg: true,
+    subLoadedMsg: true,
+    emitMessageOnInteraction: true, // Will trigger the message event when the interactionCreate event is triggered
+    builtInHelpCommand: { color: "#FF0000", slashCommand: true }, // Built in help command excepts a MessageEmbed and then the slashCommand property
+    debug: true // Adds colorful debugger
+}
+
 // Anything you want to store (client.fs | client.ms | client.messages)
 const modules = {
         fs: require("fs"),
@@ -36,20 +63,6 @@ const modules = {
         }
         // etc
     }
-
-// The paths to your Command, Argument, and Event files.
-const paths = {
-        cmds: path.join(__dirname, "Commands"),
-        events: path.join(__dirname, "Events"),
-        args: path.join(__dirname, "Arguments")
-    }
-
-// Optional values for console messages
-const bools = {
-    cmdLoadedMsg: true,
-    eventLoadedMsg: true,
-    argLoadedMsg: true
-}
 
 const client = new Client(config, paths, bools, modules);
 ```
@@ -63,8 +76,10 @@ module.exports = new Command({
     name: "ping",
     desc: "Shows bot ping",
     aliases: ["ping", "p"],
-    permissions: [new Permissions("SEND_MESSAGES")] /*This can be a normal string with the permission name in it, a permissions object, a bitfield, an id of a role, an id of a user, or a string flag*/,
-    /*optional*/ usage: "!ping",
+    permissions: [new Permissions("SEND_MESSAGES")], // Permission name, permissions object, bitfield, id of role, id of user, or string flag
+    category: "other",
+    usage: "!ping <real>?", // Optional
+    argumentDescriptions: [{ argument: "booleanReal", desc: "Whether to get real ping or not" }], // Param conversions
     slashCommand: {
         bool: true,
         options: [{
@@ -81,9 +96,12 @@ module.exports = new Command({
             }]
         }]
     },
-    async run(message, args, client) {
-        const msg = await message.channel.send("Pinging...");
-        msg.edit(`${msg.createdTimestamp - message.createdTimestamp} milliseconds.`);
+    async run(message, args, client, booleanReal /*Param Conversions*/) {
+        if (booleanReal) message.channel.send(`Ping: ${client.ws.ping} ms.`)
+        else {
+            const msg = await message.channel.send("Pinging...");
+            msg.edit(`${msg.createdTimestamp - message.createdTimestamp} milliseconds.`);
+        }
     }
 });
 ```
@@ -100,20 +118,20 @@ module.exports = new Event({
 });
 ```
 
-Argument:
+Subcommand:
 ```js
-// New argument file in the arguments/<command name> folder
-const { Argument } = require("fero-dc");
+// New Subcommand file in the Subcommands/<command name> folder
+const { Subcommand } = require("fero-dc");
 const { Permissions } = require("discord.js");
-module.exports = new Argument({
+module.exports = new Subcommand({
     name: "real",
     desc: "Shows real websocket bot ping",
     aliases: ["real", "r"],
     parent: "ping",
-    permissions: [ new Permissions("SEND_MESSAGES"), "MOD", "000000000000000000" ] /*This can be a normal string with the permission name in it, a permissions object, a bitfield, an id of a role, an id of a user, or a string flag*/,
-    /*optional*/ usage: "!ping real",
+    permissions: [ new Permissions("SEND_MESSAGES") ], // Permission name, permissions object, bitfield, id of role, id of user, or string flag
+    usage: "!ping real", // Optional
     async run(message, args, client) {
-        return message.reply(new client.discord.WebsocketManager(client).ping);
+        message.reply(client.ws.ping);
     }
 });
 ```

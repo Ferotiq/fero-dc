@@ -1,21 +1,50 @@
 {
-  "name": "fero-dc",
-  "version": "1.3.3",
+  "_from": "fero-dc@^1.3.3",
+  "_id": "fero-dc@1.3.4",
+  "_inBundle": false,
+  "_integrity": "sha512-8ChlfATs9ZYWIEU6RnXCpJJmFYP+t5fAFsBkweSm5qq4GYtlsuufH11cgLPD9DfTWAba6c9VaFE4Ccv0lWWqXg==",
+  "_location": "/fero-dc",
+  "_phantomChildren": {},
+  "_requested": {
+    "type": "range",
+    "registry": true,
+    "raw": "fero-dc@^1.3.3",
+    "name": "fero-dc",
+    "escapedName": "fero-dc",
+    "rawSpec": "^1.3.3",
+    "saveSpec": null,
+    "fetchSpec": "^1.3.3"
+  },
+  "_requiredBy": [
+    "#USER",
+    "/"
+  ],
+  "_resolved": "https://registry.npmjs.org/fero-dc/-/fero-dc-1.3.4.tgz",
+  "_shasum": "7908e6572f3e6dff1889014502ddd5fab17cb5bf",
+  "_spec": "fero-dc@^1.3.3",
+  "_where": "D:\\Mega\\File Transfer\\WOFBOTS\\Delta\\Delta3.0.0",
+  "author": {
+    "name": "Ferotiq"
+  },
+  "bugs": {
+    "url": "https://github.com/Ferotiq/fero-dc/issues"
+  },
+  "bundleDependencies": false,
+  "dependencies": {
+    "colors": "^1.4.0",
+    "discord-slash-commands-client": "^1.1.1",
+    "discord.js": "^12.5.1",
+    "fero-ms": "^1.0.2"
+  },
+  "deprecated": false,
   "description": "Ultimate classes and methods to organize the client, commands, events, and more for your discord bot.",
+  "homepage": "https://github.com/Ferotiq/fero-dc#readme",
+  "license": "MIT",
   "main": "src/index.js",
+  "name": "fero-dc",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Ferotiq/fero-dc.git"
   },
-  "author": "Ferotiq",
-  "license": "MIT",
-  "bugs": {
-    "url": "https://github.com/Ferotiq/fero-dc/issues"
-  },
-  "homepage": "https://github.com/Ferotiq/fero-dc#readme",
-  "dependencies": {
-    "colors": "^1.4.0",
-    "discord-slash-commands-client": "^1.1.1",
-    "discord.js": "^12.5.1"
-  }
+  "version": "1.4.1"
 }
