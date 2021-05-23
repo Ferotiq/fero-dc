@@ -1,9 +1,10 @@
-"use strict"
+//"use strict"
 
 const Discord = require("discord.js"),
-    Client = require("./Client.js");
+    Client = require("./Client.js"),
+    https = require("https");
 
-module.exports = class InteractionMessage {
+class Interaction {
 
     /**
      * @type {Discord.User}
@@ -13,6 +14,10 @@ module.exports = class InteractionMessage {
      * @type {Discord.GuildMember}
      */
     member;
+    /**
+     * @type {Discord.Message}
+     */
+    originalReply;
 
     /**
      * @param {Client} client 
@@ -27,13 +32,18 @@ module.exports = class InteractionMessage {
         this.commandID = interaction.data.id;
         this.commandOptions = interaction.data.options ?? new Array();
         this.id = interaction.id;
+        this.token = interaction.token;
+        /**
+         * @protected
+         */
+        this._originalReplyUrl = `https://discord.com/api/v8/webhooks/${this.client.user.id}/${this.token}/messages/@original`;
+        this.rawAuthor = interaction.member.user;
+        this.rawMember = interaction.member;
         this.guild = client.guilds.cache.get(interaction.guild_id);
         /**
          * @type {Discord.TextChannel | Discord.DMChannel}
          */
         this.channel = this.client.channels.cache.get(interaction.channel_id);
-        this.rawAuthor = interaction.member.user;
-        this.rawMember = interaction.member;
         this.args = [this.command];
         this.args = this.args.concat(this.commandOptions.map(v => {
             if (v.value) return v.value;
@@ -48,6 +58,10 @@ module.exports = class InteractionMessage {
         this.subCommands.concat(this.commandOptions.filter(option => {
             if (option.options) return true;
         }));
+        /**
+         * @type {Discord.Collection<String, Discord.MessageAttachment}
+         */
+        this.attachments = new Discord.Collection();
         this.resolved = {
             users: new Array(),
             members: new Array(),
@@ -106,42 +120,61 @@ module.exports = class InteractionMessage {
     }
 
     /**
-     * @param {StringResolvable | Discord.APIMessage} [content=''] The content for the message
-     * @param {Discord.MessageOptions | Discord.MessageAdditions} [options={}] The options to provide
-     * @param {1 | 4 | 5} [type=4]
-     * @returns {Discord.Message | Discord.Message[]}
+     * Replies to the interaction, or if already replied, sends a followup message, returns the message
+     * @param {Discord.APIMessageContentResolvable} content The content for the message
+     * @returns {Promise<Discord.Message>} The response
      */
-    async reply(content, options, type = 4) {
+    async reply(content) {
 
-        var apiMessage;
-
-        if (content instanceof Discord.APIMessage) {
-            apiMessage = content.resolveData();
-        } else {
-            apiMessage = Discord.APIMessage.create(this, content, options).resolveData();
-            if (Array.isArray(apiMessage.data.content)) {
-                return Promise.all(apiMessage.split().map(this.reply.bind(this.interaction)));
-            }
-        }
-
+        const apiMessage = content instanceof Discord.APIMessage ? content : Discord.APIMessage.create(this.channel, content);
+        
         const {
             data,
             files
-        } = await apiMessage.resolveFiles();
+        } = await apiMessage.resolveData().resolveFiles();
 
-        try {
-            this.client.api.interactions(this.interaction.id, this.interaction.token).callback.post({
+        const msg = await this.originalReply ? this.followUp(data, files) : this.respond(data, files);
+
+        return msg;
+
+    }
+
+    /**
+     * Pend a response to then edit later
+     * @param {String} pendingResponse 
+     */
+    async pend(pendingResponse = "Pending...") {
+        if (this.originalReply) return this.originalReply;
+        await this.client.api.interactions(this.id, this.token).callback.post({
+            data: {
                 data: {
-                    data,
-                    type,
-                    files
-                }
-            });
-            return this.interaction.token;
-        } catch {
-            const message = await this.channel.send(`${this.author}, ${data.content}`);
-            return message; 
-        };
+                    content: pendingResponse
+                },
+                type: 5,
+                query: {
+                    wait: true
+                },
+                auth: false,
+            }
+        });
+        return await oR(this);
+    }
+
+    /**
+     * @typedef {{timeout?: Number, reason?: String}} InteractionDeleteOptions
+     */
+
+    /**
+     * Delete the original reply, or make a reply then delete it, which deletes the interaction itself
+     * @param {InteractionDeleteOptions} options 
+     */
+    delete(options = {}) {
+
+        if (!this.originalReply) {
+            this.reply("_ _").then(m => m.delete(options));
+        } else {
+            this.originalReply.delete(options);
+        }
 
     }
 
@@ -162,4 +195,45 @@ module.exports = class InteractionMessage {
         return this;
     }
 
+    /**
+     * @private
+     */
+    async followUp(data, files) {
+        const message = await this.client.api.webhooks(this.client.user.id, this.token).post({
+            data,
+            files
+        })
+        return new Discord.Message(this.client, message, this.client.channels.cache.get(message.channel_id));
+    }
+
+    /**
+     * @private
+     */
+    async respond(data, files) {
+        this.client.api.interactions(this.id, this.token).callback.post({
+            data: {
+                data,
+                type: 4,
+                files
+            }
+        });
+        return await oR(this);
+    }
+
+};
+
+function oR(t) {
+    if (t.originalReply) return t.originalReply;
+    return new Promise(resolve => https.get(t._originalReplyUrl, res => {
+        var data = "";
+        res.on("data", d => data += d);
+        res.on("end", () => {
+            const jsonData = JSON.parse(data);
+            const message = new Discord.Message(t.client, jsonData, t.client.channels.cache.get(jsonData.channel_id));
+            t.originalReply = message;
+            resolve(t.originalReply);
+        });
+    }));
 }
+
+module.exports = Interaction;

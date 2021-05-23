@@ -1,3 +1,5 @@
+"use strict"
+
 module.exports = (client, string, cmd, type) => {
     if (type == "cmd") {
         const command = client.commands.find(c => c.aliases.includes(string));

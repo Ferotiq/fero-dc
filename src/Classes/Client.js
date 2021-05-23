@@ -1,4 +1,4 @@
-"use strict"
+"use strict";
 
 // Imports
 const Discord = require("discord.js"),
@@ -9,7 +9,6 @@ const Discord = require("discord.js"),
     Subcommand = require("./Subcommand.js"),
     Event = require("./Event.js"),
     interactions = require("discord-slash-commands-client"),
-    InteractionMessage = require("./InteractionMessage.js"),
     FMS = require("fero-ms"),
     resolveUser = require("../Scripts/resolveUser.js"),
     resolveChannel = require("../Scripts/resolveChannel.js"),
@@ -24,16 +23,17 @@ const Discord = require("discord.js"),
 const stripComments = /(\/\/.*$)|(\/\*[\s\S]*?\*\/)|(\s*=[^,\)]*(('(?:\\'|[^'\r\n])*')|("(?:\\"|[^"\r\n])*"))|(\s*=[^,\)]*))/mg;
 const argumentNames = /([^\s,]+)/g;
 
+new Discord.MessageEmbed();
+
 /**
  * A built-on version of the standard Discord.js Client
  * @extends {Discord.Client}
  */
 module.exports = class Client extends Discord.Client {
 
-    // Define types for simplicity
-
     /**
-     * @typedef {{color: Discord.ColorResolvable, footer: {text: String, iconURL: String, proxyIconURL: string} slashCommand: boolean}} HelpCmdStyle
+     * Define types for simplicity
+     * @typedef {Discord.MessageEmbedOptions & { slashCommand: Boolean }} HelpCmdStyle
      * @typedef {{token: String, prefix: String, discordConfig: Discord.ClientOptions}} Config
      * @typedef {{cmds: String, events: String, subs: String}} Paths
      * @typedef {{cmdLoadedMsg: boolean, eventLoadedMsg: boolean, subLoadedMsg: boolean, emitMessageOnInteraction: boolean, builtInHelpCommand: HelpCmdStyle | false, debug: boolean}} Bools
@@ -82,6 +82,11 @@ module.exports = class Client extends Discord.Client {
          * @type {Discord.Collection<String, Subcommand>}
          */
         this.subcommands = new Discord.Collection();
+        /**
+         * An array with all the command categories
+         * @type {String[]}
+         */
+        this.commandCategories = new Array();
 
         // Configs
         this.prefix = config.prefix || "!";
@@ -126,6 +131,7 @@ module.exports = class Client extends Discord.Client {
         // Add counters to tally up everything that's loaded
         var commandsCount = 0,
             subcommandsCount = 0,
+            categoriesCount = 0,
             eventsCount = 0,
             modulesCount = 0;
 
@@ -194,6 +200,12 @@ module.exports = class Client extends Discord.Client {
             // If the file isn't of type "Command" return
             if (!(fileCommand instanceof Command)) return;
 
+            // Add the category to categories list
+            if (!this.commandCategories.includes(fileCommand.category) && fileCommand != null) {
+                categoriesCount++;
+                this.commandCategories.push(fileCommand.category);
+            }
+
             // If it's enabled for slash command, then add or edit them
             if (fileCommand.slashCommand.bool) fileCommand.aliases.forEach(alias => {
                 const cmd = slashCommands instanceof Array ? slashCommands.find(cmd => cmd.name.toLowerCase() == alias.toLowerCase()) : slashCommands.name.toLowerCase() == alias.toLowerCase();
@@ -221,7 +233,7 @@ module.exports = class Client extends Discord.Client {
             // Prevent command overwrites
             if (this.commands.get(fileCommand.name))
                 throw Error(`Fero-DC: Command "${fileCommand.name}" was attempted to be overwritten.${fileCommand.name == "help" && this.clientOptions.builtInHelpCommand ? `\n\nThis is due to the builtInHelpCommand not being false.` : ""}`);
-            
+
             // Get the parameters of the run function to convert them
             const conversions = this.getParamNames(fileCommand.run);
 
@@ -266,19 +278,21 @@ module.exports = class Client extends Discord.Client {
                 if (!fileSubcommand.parent.startsWith(fileCommand.name)) return;
 
                 // Set the subcommand into the collection
-                this.subcommands.set(fileSubcommand.parent, fileSubcommand);
+                this.subcommands.set(`${fileSubcommand.parent}/${fileSubcommand.name}`, fileSubcommand);
 
                 // Log the subcommand
-                if (this.clientOptions.subLoadedMsg) console.log(`Subcommand "${fileSubcommand.name.bold}" loaded for subcommand train "${fileSubcommand.parent}".`.green);
-            
+                if (this.clientOptions.subLoadedMsg) console.log(`Subcommand "${fileSubcommand.name.bold}" loaded for subcommand train "${fileSubcommand.parent.bold}".`.green);
+
             });
         });
 
         // Remove all added events
         this.removeAllListeners();
 
-        // If emitMessageOnInteraction then for each interaction, emit message with the InteractionMessage
-        if (this.clientOptions.emitMessageOnInteraction) this.ws.on("INTERACTION_CREATE", async interaction => this.emit("message", await new InteractionMessage(this, interaction).fetchMember()));
+        const Interaction = require("./Interaction");
+
+        // If emitMessageOnInteraction then for each interaction, emit message with the Interaction
+        if (this.clientOptions.emitMessageOnInteraction) this.ws.on("INTERACTION_CREATE", async interaction => this.emit("message", await (new Interaction(this, interaction)).fetchMember()));
 
         // If debug is on, then do custom debugging
         if (this.clientOptions.debug) this.on("debug", (...info) => {
@@ -290,7 +304,7 @@ module.exports = class Client extends Discord.Client {
                         s = s.substring(0, s.indexOf(m)) + s.substring(s.indexOf(m), s.indexOf(m) + m.length).green + s.substring(s.indexOf(m) + m.length);
                     console.log(`${`{${new Date(Date.now()).toUTCString()}}`.green}: ${s}`);
                 }
-            })
+            });
         });
 
         // Read the events directory and go all the files
@@ -317,23 +331,16 @@ module.exports = class Client extends Discord.Client {
 
         });
 
-        // Loop through all the modules
-        Object.entries(this.modules).forEach(m => {
-
-            // Up the module counter
-            modulesCount++;
-
-            // Add the module to this client
-            this[m[0]] = m[1] || null;
-
-        });
+        // Assign this the modules
+        Object.assign(this, this.modules);
+        modulesCount += Object.keys(this.modules).length;
 
         // Add Discord
         this.discord = Discord;
-        
+
         // Emit ready once the reloading is done
         this.emit("ready");
-        
+
         // Return the reload message
         return `Reloaded ${commandsCount} commands, ${subcommandsCount} subcommands, ${eventsCount} events, and ${modulesCount} modules.`;
 
@@ -367,7 +374,7 @@ module.exports = class Client extends Discord.Client {
 
         // If the member has a role alias
         const hasPermissionsRoleAliases = permissionsRoleAliasesArray.map(v => data[v]).find(sf => sf.includes(member.id) || sf.find(r => member.roles.cache.has(r))) ? true : false;
-       
+
         // If the member has a permission
         const hasPermissionsPermissions = (await Promise.all(permissionsPermissionsArray.map(v => member.hasPermission(v)))).includes(true);
 
@@ -403,7 +410,7 @@ module.exports = class Client extends Discord.Client {
             throw Error(`Fero-DC: Command ${command} has improper parameters.`);
 
         // Convert all the parameters
-        const newConversions = await Promise.all(conversions.map(async (v, i) => await v.type(args[i + 1], message.guild)));
+        const newConversions = await Promise.all(conversions.map(async (v, i) => await v.type(args[i + 1], message, args.slice(i + 2).join(" "))));
 
         // Run the command with the parameters
         const result = await command.run(message, args, this, ...newConversions);
@@ -414,53 +421,60 @@ module.exports = class Client extends Discord.Client {
     }
 
     /**
+     * A public description for parameter converter types
+     */
+    converterTypes = {
+        string: "A single-word string of text",
+        mstring: "A multi-word string of text",
+        char: "A single character (takes first character of a word given)",
+        number: "A floating point (decimal) number",
+        int: "An integer (whole number)",
+        float: "A floating point (decimal) number",
+        double: "A floating point (decimal) number",
+        boolean: "A truthful or falsy value",
+        bool: "A truthful or falsy value",
+        color: "A hexidecimal color",
+        guild: "A Discord server",
+        member: "A Discord server member",
+        user: "A Discord user",
+        channel: "A Discord channel (all types)",
+        message: "A Discord message from a Discord text channel",
+        invite: "A Discord invite for a Discord server",
+        emoji: "A Discord emoji",
+        role: "A Discord server role",
+        permission: "A Discord server permission",
+        time: "A fero-ms time format (https://npmjs.com/package/fero-ms for more info)",
+        subcommand: "A fero-dc subcommand",
+        command: "A fero-dc parent command"
+    }
+
+    /**
      * Converters
      * @private
      */
     constructors = {
-        string: (...data) => new String(...data),
-        char: (...data) => new String(...data).substring(0, 1),
-        number: parseFloat,
-        int: parseInt,
-        float: parseFloat,
-        double: parseFloat,
-        boolean: str => ["false", "0", "0n", "null", "undefined", "NaN", ""].includes(str) ? false : true,
-        bool: str => ["false", "0", "0n", "null", "undefined", "NaN", ""].includes(str) ? false : true,
-        color: Discord.Util.resolveColor,
-        guild: this.guilds.cache.get,
-        /**
-         * @param {Discord.Guild} guild 
-         * @param {String} string 
-         * @returns {Discord.GuildMember}
-         */
-        member: async (string, guild) => guild.member(await resolveUser(this, string)),
-        /**
-         * @param {String} string 
-         * @returns {Discord.User}
-         */
+        string: string => string,
+        mstring: (...string) => string.filter(s => typeof (s) == "string").join(" "),
+        char: string => string.substring(0, 1),
+        number: string => parseFloat(string),
+        int: string => parseInt(string),
+        float: string => parseFloat(string),
+        double: string => parseFloat(string),
+        boolean: string => ["false", "0", "0n", "null", "undefined", "NaN", "", "no", "off"].includes(string) ? false : true,
+        bool: string => ["false", "0", "0n", "null", "undefined", "NaN", "", "no", "off"].includes(string) ? false : true,
+        color: string => Discord.Util.resolveColor(string),
+        guild: string => this.guilds.cache.get(string),
+        member: async (string, message) => message.guild.member(await resolveUser(this, string)),
         user: string => resolveUser(this, string),
-        /**
-         * @param {String} string 
-         * @returns {Discord.TextChannel | Discord.DMChannel}
-         */
         channel: string => resolveChannel(this, string),
-        message: resolveMessage,
-        invite: resolveInvite,
-        /**
-         * @param {String} string 
-         * @returns {Discord.Emoji}
-         */
+        message: (string, message) => resolveMessage(message, string),
+        invite: (string, message) => resolveInvite(message, string),
         emoji: string => resolveEmoji(this, string),
-        /**
-         * @param {Discord.Guild} guild 
-         * @param {String} string 
-         * @returns {Discord.Role}
-         */
-        role: (string, guild) => resolveRole(guild, string),
-        permission: resolvePermission,
-        time: t => FMS(t, "ms"),
-        subcommand: (string, guild, cmd) => resolveSubcommand(this, string, cmd),
-        command: (string, guild, cmd) => resolveSubcommand(this, string, cmd, "cmd")
+        role: (string, message) => resolveRole(message, string),
+        permission: string => resolvePermission(string),
+        time: string => FMS(string, "ms"),
+        subcommand: (string, message, cmd) => resolveSubcommand(this, string, cmd),
+        command: (string, message, cmd) => resolveSubcommand(this, string, cmd, "cmd")
     }
 
     /**
@@ -511,4 +525,28 @@ module.exports = class Client extends Discord.Client {
         return this.commands.filter(command => command.category == category);
     }
 
+    /**
+     * Get the command usage of a command, if it doesn't have one, format it with the arguments
+     * @param {Command} command 
+     * @returns {String}
+     */
+    getCommandUsage(command) {
+        const cmdArgs = command.args.map(v => `<${getName(v)}${find(v, command)?.optional ?? false ? "?" : ""}>`).join(" ");
+        const usage = command.usage || `${client.prefix}${command.name}${cmdArgs == "" ? "" : " " + cmdArgs}`;
+        return usage;
+    }
+
+}
+
+function find(v, command) {
+    return command.argumentDescriptions.find(v2 => v2.argument == v.fullName);
+}
+
+function getName(v) {
+    const s = v.fullName != v.name && (v.name.match(/[a-zA-Z]/)?.length > 0 ?? false) ? v.name : v.fullName;
+    return FLL(s);
+}
+
+function FLL(s) {
+    return s.substring(0, 1).toLowerCase() + s.substring(1);
 }

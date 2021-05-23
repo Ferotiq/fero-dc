@@ -22,9 +22,11 @@ npm:
 `npm i --save fero-dc`
 
 yarn:
-`yarn add --save fero-dc`
+`yarn add fero-dc`
 
 # Utilization
+
+For more help visit [my YouTube](https://www.youtube.com/c/Ferotiq)
 
 Client:
 ```js
@@ -79,21 +81,14 @@ module.exports = new Command({
     permissions: [new Permissions("SEND_MESSAGES")], // Permission name, permissions object, bitfield, id of role, id of user, or string flag
     category: "other",
     usage: "!ping <real>?", // Optional
-    argumentDescriptions: [{ argument: "booleanReal", desc: "Whether to get real ping or not" }], // Param conversions
+    argumentDescriptions: [{ argument: "booleanReal", desc: "Whether to get real ping or not", optional: true }], // Param conversions
     slashCommand: {
         bool: true,
         options: [{
             name: "real",
             description: "Shows websocket ping instead of message ping",
-            type: 5,
-            required: false,
-            choices: [{
-                name: "True",
-                value: true
-            }, {
-                name: "False",
-                value: false
-            }]
+            type: "BOOLEAN",
+            required: false
         }]
     },
     async run(message, args, client, booleanReal /*Param Conversions*/) {
@@ -121,14 +116,14 @@ module.exports = new Event({
 Subcommand:
 ```js
 // New Subcommand file in the Subcommands/<command name> folder
-const { Subcommand } = require("fero-dc");
-const { Permissions } = require("discord.js");
+const { Subcommand, Discord } = require("fero-dc");
+
 module.exports = new Subcommand({
     name: "real",
     desc: "Shows real websocket bot ping",
     aliases: ["real", "r"],
     parent: "ping",
-    permissions: [ new Permissions("SEND_MESSAGES") ], // Permission name, permissions object, bitfield, id of role, id of user, or string flag
+    permissions: [ new Discord.Permissions("SEND_MESSAGES") ], // Permission name, permissions object, bitfield, id of role, id of user, or string flag
     usage: "!ping real", // Optional
     async run(message, args, client) {
         message.reply(client.ws.ping);
@@ -141,11 +136,11 @@ module.exports = new Subcommand({
 Creating the Event:
 ```js
 // New event file in the events folder
-const { Event, InteractionMessage } = require("fero-dc");
+const { Event, Interaction } = require("fero-dc");
 module.exports = new Event({
     name: "interactionCreate",
     async run(client, interaction) {
-        const message = new InteractionMessage(client, interaction);
+        const message = await (new Interaction(client, interaction)).fetchMember();
         message.reply("Hello!");
     }
 }); 

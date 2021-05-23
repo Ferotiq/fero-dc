@@ -1,6 +1,8 @@
-module.exports = async (guild, string) => {
+"use strict"
 
-    const invite = (await guild.fetchInvites()).find(e => e.code == string || e.url == string);
+module.exports = async (message, string) => {
+
+    const invite = (await message.guild.fetchInvites()).find(e => e.code == string || e.url == string);
     return invite ? invite : null; 
 
 }
