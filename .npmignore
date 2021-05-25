@@ -1,0 +1,7 @@
+node_modules
+src/Events
+src/Commands
+src/Subcommands
+src/Data
+.vscode
+.git
