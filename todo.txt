@@ -1,5 +1,0 @@
-- Built in help command | check
-- Add Erela.js | shelf
-- Change Arguments to Subcommands | check
-- Document | check
-- Documentation | shelf
