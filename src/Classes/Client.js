@@ -173,6 +173,7 @@ module.exports = class Client extends Discord.Client {
 
             // Set it in the collection
             this.commands.set("help", c);
+            if (!this.commandCategories.includes(c.category)) this.commandCategories.push(c.category);
 
             // If there isn't a help slash command, add it
             const cmd = slashCommands instanceof Array ? slashCommands.find(cmd => cmd.name.toLowerCase() == c.name.toLowerCase()) : slashCommands.name.toLowerCase() == c.name.toLowerCase();
@@ -410,7 +411,7 @@ module.exports = class Client extends Discord.Client {
             throw Error(`Fero-DC: Command ${command} has improper parameters.`);
 
         // Convert all the parameters
-        const newConversions = await Promise.all(conversions.map(async (v, i) => await v.type(args[i + 1], message, args.slice(i + 2).join(" "))));
+        const newConversions = await Promise.all(conversions.map(async (v, i) => await v.type(args[i + 1], message, args.slice(i + 2).join(" "), command)));
 
         // Run the command with the parameters
         const result = await command.run(message, args, this, ...newConversions);
@@ -466,15 +467,15 @@ module.exports = class Client extends Discord.Client {
         guild: string => this.guilds.cache.get(string),
         member: async (string, message) => message.guild.member(await resolveUser(this, string)),
         user: string => resolveUser(this, string),
-        channel: string => resolveChannel(this, string),
+        channel: (string, message) => resolveChannel(message, string),
         message: (string, message) => resolveMessage(message, string),
         invite: (string, message) => resolveInvite(message, string),
         emoji: string => resolveEmoji(this, string),
         role: (string, message) => resolveRole(message, string),
         permission: string => resolvePermission(string),
         time: string => FMS(string, "ms"),
-        subcommand: (string, message, cmd) => resolveSubcommand(this, string, cmd),
-        command: (string, message, cmd) => resolveSubcommand(this, string, cmd, "cmd")
+        subcommand: (string, message, rest, cmd) => resolveSubcommand(this, string, cmd),
+        command: (string, message, rest, cmd) => resolveSubcommand(this, string, cmd, "cmd")
     }
 
     /**
@@ -532,7 +533,7 @@ module.exports = class Client extends Discord.Client {
      */
     getCommandUsage(command) {
         const cmdArgs = command.args.map(v => `<${getName(v)}${find(v, command)?.optional ?? false ? "?" : ""}>`).join(" ");
-        const usage = command.usage || `${client.prefix}${command.name}${cmdArgs == "" ? "" : " " + cmdArgs}`;
+        const usage = command.usage || `${this.prefix}${command.name}${cmdArgs == "" ? "" : " " + cmdArgs}`;
         return usage;
     }
 

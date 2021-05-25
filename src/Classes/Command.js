@@ -26,7 +26,7 @@ module.exports = class Command {
      * @typedef {{argument: String, desc: String, optional?: Boolean}} ArgumentDescription
      * @typedef {{fullName: String, name: String, type: String}} Argument
      * @typedef {{bool: Boolean, options?: SlashCommandOption[]}} SlashCommand
-     * @typedef {{name: String, desc: String, aliases: String[], permissions: Discord.Permissions[] | String[], usage: String, category: String, slashCommand: SlashCommand, argumentDescriptions?: ArgumentDescription[], run: Function}} CommandOptions
+     * @typedef {{name: String, desc: String, aliases: String[], permissions: Discord.PermissionResolvable[], usage: String, category: String, slashCommand: SlashCommand, argumentDescriptions?: ArgumentDescription[], run: Function}} CommandOptions
      */
 
     /**
