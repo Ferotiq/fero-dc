@@ -434,7 +434,7 @@ module.exports = class Client extends Discord.Client {
         double: "A floating point (decimal) number",
         boolean: "A truthful or falsy value",
         bool: "A truthful or falsy value",
-        color: "A hexidecimal color",
+        color: "A hexadecimal color",
         guild: "A Discord server",
         member: "A Discord server member",
         user: "A Discord user",
