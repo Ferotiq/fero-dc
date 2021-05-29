@@ -132,7 +132,6 @@ module.exports = new Event({
 ```
 
 Subcommand:
-
 ```js
 // New Subcommand file in the Subcommands/<command name> folder
 const { Subcommand, Discord } = require("fero-dc");
