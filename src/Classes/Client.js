@@ -8,6 +8,7 @@ const Discord = require("discord.js"),
 	Command = require("./Command.js"),
 	Subcommand = require("./Subcommand.js"),
 	Event = require("./Event.js"),
+	Interaction = require("./Interaction"),
 	interactions = require("discord-slash-commands-client"),
 	FMS = require("fero-ms"),
 	resolveUser = require("../Scripts/resolveUser.js"),
@@ -21,22 +22,21 @@ const Discord = require("discord.js"),
 	builtInHelpCommand = require("../Scripts/builtInHelpCommand.js");
 
 const stripComments =
-	/(\/\/.*$)|(\/\*[\s\S]*?\*\/)|(\s*=[^,\)]*(('(?:\\'|[^'\r\n])*')|("(?:\\"|[^"\r\n])*"))|(\s*=[^,\)]*))/gm;
-const argumentNames = /([^\s,]+)/g;
-
-const falsy = [
-	"false",
-	"0",
-	"0n",
-	"null",
-	"undefined",
-	"NaN",
-	"",
-	"no",
-	"off",
-	null,
-	undefined
-];
+		/(\/\/.*$)|(\/\*[\s\S]*?\*\/)|(\s*=[^,\)]*(('(?:\\'|[^'\r\n])*')|("(?:\\"|[^"\r\n])*"))|(\s*=[^,\)]*))/gm,
+	argumentNames = /([^\s,]+)/g,
+	falsy = [
+		"false",
+		"0",
+		"0n",
+		"null",
+		"undefined",
+		"NaN",
+		"",
+		"no",
+		"off",
+		null,
+		undefined
+	];
 
 /**
  * A built-on version of the standard Discord.js Client
@@ -47,52 +47,47 @@ module.exports = class Client extends Discord.Client {
 	 * Define types for simplicity
 	 * @typedef {Discord.Collection<String | Discord.Guild, String> | [String | Discord.Guild, String][] | Map<String | Discord.Guild, String>} PrefixCollection
 	 * @typedef {Discord.MessageEmbedOptions & { slashCommand: Boolean }} HelpCmdStyle
-	 * @typedef {{token: String, prefix: String, discordConfig: Discord.ClientOptions}} Config
+	 * @typedef {{cmdLoadedMsg: boolean, eventLoadedMsg: boolean, subLoadedMsg: boolean, emitMessageOnInteraction: boolean, builtInHelpCommand: HelpCmdStyle | false, debug: boolean, deleteUnusedSlashCommands: boolean}} Bools
+	 * @typedef {{token: String, prefix: String} & Bools & Discord.ClientOptions} Config
 	 * @typedef {{cmds: String, events: String, subs: String}} Paths
-	 * @typedef {{cmdLoadedMsg: boolean, eventLoadedMsg: boolean, subLoadedMsg: boolean, emitMessageOnInteraction: boolean, builtInHelpCommand: HelpCmdStyle | false, debug: boolean}} Bools
 	 */
 
-	// Construct the client class
-
 	/**
-	 * @param {Config} config - Stores bot token and prefix
+	 * Create a new Fero-DC Discord Client
+	 * @param {Config} config - Stores bot token, prefix, bools, and client options
 	 * @param {Paths} paths - Paths to the Commands, Subcommands, and Events folders
-	 * @param {Bools} bools - Boolean values for some client settings
 	 * @param {Object} modules - Stores modules/data that is requested to be stored in the client (key-value pairs)
 	 */
 	constructor(
 		config = {
 			token: "BOTTOKEN",
 			prefix: "!",
-			discordConfig: {
-				partials: [
-					"CHANNEL",
-					"GUILD_MEMBER",
-					"MESSAGE",
-					"REACTION",
-					"USER"
-				],
-				fetchAllMembers: true,
-				disableMentions: "everyone"
-			}
+			partials: [
+				"CHANNEL",
+				"GUILD_MEMBER",
+				"MESSAGE",
+				"REACTION",
+				"USER"
+			],
+			fetchAllMembers: true,
+			disableMentions: "everyone",
+			cmdLoadedMsg: true,
+			eventLoadedMsg: true,
+			subLoadedMsg: true,
+			emitMessageOnInteraction: false,
+			builtInHelpCommand: false,
+			debug: false,
+			deleteUnusedSlashCommands: false
 		},
 		paths = {
 			cmds: path.join(process.cwd(), "src", "Commands"),
 			subs: path.join(process.cwd(), "src", "Subcommands"),
 			events: path.join(process.cwd(), "src", "Events")
 		},
-		bools = {
-			cmdLoadedMsg: true,
-			eventLoadedMsg: true,
-			subLoadedMsg: true,
-			emitMessageOnInteraction: false,
-			builtInHelpCommand: false,
-			debug: false
-		},
 		modules = {}
 	) {
 		// Initiate Discord Client
-		super(config.discordConfig);
+		super(config);
 
 		// Collections for the Handlers
 		/**
@@ -128,7 +123,15 @@ module.exports = class Client extends Discord.Client {
 		 * The boolean values passed into the client (bools)
 		 * @type {Bools}
 		 */
-		this.bools = bools;
+		this.bools = {
+			cmdLoadedMsg: config.cmdLoadedMsg,
+			subLoadedMsg: config.subLoadedMsg,
+			eventLoadedMsg: config.eventLoadedMsg,
+			emitMessageOnInteraction: config.emitMessageOnInteraction,
+			builtInHelpCommand: config.builtInHelpCommand,
+			debug: config.debug,
+			deleteUnusedSlashCommands: config.deleteUnusedSlashCommands
+		};
 		/**
 		 * The paths to all handlers
 		 * @type {Paths}
@@ -171,12 +174,8 @@ module.exports = class Client extends Discord.Client {
 	 * @returns {String} A reload message showing how many commands, subcommands, events, and modules were reloaded
 	 */
 	async reload() {
-		// Add counters to tally up everything that's loaded
-		var commandsCount = 0,
-			subcommandsCount = 0,
-			categoriesCount = 0,
-			eventsCount = 0,
-			modulesCount = 0;
+		// Add event counter to tally up all events
+		var eventsCount = 0;
 
 		// Clear all collections
 		this.commands.clear();
@@ -211,7 +210,7 @@ module.exports = class Client extends Discord.Client {
 			});
 
 			// If there isn't, delete the command
-			if (!c) {
+			if (!c && this.bools.deleteUnusedSlashCommands) {
 				this.interactionsClient.deleteCommand(command.id);
 				console.log(
 					`Deleted SlashCommand ${command.name.bold} (${command.id.bold})`
@@ -274,9 +273,6 @@ module.exports = class Client extends Discord.Client {
 
 		// Loop through all the command files and set them up
 		commands.forEach(file => {
-			// Up the command counter
-			commandsCount++;
-
 			// Import the file
 			const fileCommand = require(`${this.paths.cmds}/${file}`);
 
@@ -287,10 +283,8 @@ module.exports = class Client extends Discord.Client {
 			if (
 				!this.commandCategories.includes(fileCommand.category) &&
 				fileCommand != null
-			) {
-				categoriesCount++;
+			)
 				this.commandCategories.push(fileCommand.category);
-			}
 
 			// If it's enabled for slash command, then add or edit them
 			if (fileCommand.slashCommand.bool)
@@ -408,9 +402,6 @@ module.exports = class Client extends Discord.Client {
 			fs.readdirSync(subsPath)
 				.filter(file => path.extname(file) == ".js")
 				.forEach(sub => {
-					// Up the subcommand counter
-					subcommandsCount++;
-
 					// Import the file
 					const fileSubcommand = require(`${subsPath}/${sub}`);
 
@@ -438,8 +429,6 @@ module.exports = class Client extends Discord.Client {
 
 		// Remove all added events
 		this.removeAllListeners();
-
-		const Interaction = require("./Interaction");
 
 		// If emitMessageOnInteraction then for each interaction, emit message with the Interaction
 		if (this.bools.emitMessageOnInteraction)
@@ -504,13 +493,16 @@ module.exports = class Client extends Discord.Client {
 
 		// Assign this the modules
 		Object.assign(this, this.modules);
-		modulesCount += Object.keys(this.modules).length;
 
 		// Emit ready once the reloading is done
 		this.emit("ready");
 
 		// Return the reload message
-		return `Reloaded ${commandsCount} commands, ${subcommandsCount} subcommands, ${eventsCount} events, and ${modulesCount} modules.`;
+		return `Reloaded ${this.commands.size} commands, ${
+			this.subcommands.size
+		} subcommands, ${eventsCount} events, and ${
+			Object.keys(this.modules).length
+		} modules.`;
 	}
 
 	/**

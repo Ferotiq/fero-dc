@@ -36,7 +36,16 @@ const path = require("path");
 // Config that stores your bot's token and prefix (optional)
 const config = {
 	token: "bottoken",
-	prefix: "botprefix"
+	prefix: "botprefix",
+	cmdLoadedMsg: true,
+	eventLoadedMsg: true,
+	subLoadedMsg: true,
+	emitMessageOnInteraction: true, // Will trigger the message event when the interactionCreate event is triggered
+	builtInHelpCommand: { color: "#FF0000", slashCommand: true }, // Built in help command excepts a MessageEmbed and then the slashCommand property
+	debug: true // Adds colorful debugger,
+	// Normal discord.js client options
+	partials: [],
+	disableMentions: "everyone"
 };
 
 // The paths to your Command, Subcommand, and Event files.
@@ -44,16 +53,6 @@ const paths = {
 	cmds: path.join(__dirname, "Commands"),
 	events: path.join(__dirname, "Events"),
 	subs: path.join(__dirname, "Subcommands")
-};
-
-// Optional values for other features
-const bools = {
-	cmdLoadedMsg: true,
-	eventLoadedMsg: true,
-	subLoadedMsg: true,
-	emitMessageOnInteraction: true, // Will trigger the message event when the interactionCreate event is triggered
-	builtInHelpCommand: { color: "#FF0000", slashCommand: true }, // Built in help command excepts a MessageEmbed and then the slashCommand property
-	debug: true // Adds colorful debugger
 };
 
 // Anything you want to store (client.fs | client.ms | client.messages)
@@ -67,7 +66,7 @@ const modules = {
 	// etc
 };
 
-const client = new Client(config, paths, bools, modules);
+const client = new Client(config, paths, modules);
 ```
 
 Command:
@@ -132,6 +131,7 @@ module.exports = new Event({
 ```
 
 Subcommand:
+
 ```js
 // New Subcommand file in the Subcommands/<command name> folder
 const { Subcommand, Discord } = require("fero-dc");

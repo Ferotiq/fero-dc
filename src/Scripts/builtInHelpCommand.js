@@ -44,7 +44,7 @@ module.exports = (client, options) => {
 			if (command && command instanceof Command) {
 				if (
 					command.name == "help" &&
-					client.clientOptions.builtInHelpCommand != false
+					client.bools.builtInHelpCommand != false
 				) {
 					command.args.push({
 						name: "",

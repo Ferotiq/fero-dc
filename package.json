@@ -1,6 +1,6 @@
 {
 	"_from": "fero-dc",
-	"_id": "fero-dc@1.5.4",
+	"_id": "fero-dc@1.5.5",
 	"_inBundle": false,
 	"_integrity": "sha512-GoK1jHb9XWmmWmSg2rcCLESuSGueA+HHBi4wI2ssy8RVLBjAUxYz6NViLGpRviSY4BpKXSbqOngEk2IsqtOfaw==",
 	"_location": "/fero-dc",
@@ -27,7 +27,7 @@
 		"#USER",
 		"/"
 	],
-	"_resolved": "https://registry.npmjs.org/fero-dc/-/fero-dc-1.5.4.tgz",
+	"_resolved": "https://registry.npmjs.org/fero-dc/-/fero-dc-1.5.5.tgz",
 	"_shasum": "7fe38395f3e6ef0469f706a5e3ac7de217b5f26d",
 	"_spec": "fero-dc",
 	"author": {
@@ -55,5 +55,15 @@
 		"type": "git",
 		"url": "git+https://github.com/Ferotiq/fero-dc.git"
 	},
-	"version": "1.5.4"
+	"version": "1.5.5",
+	"keywords": [
+		"ferotiq",
+		"discord.js",
+		"client",
+		"discord.js client",
+		"advanced",
+		"advanced client",
+		"advanced discord.js client",
+		"discord"
+	]
 }
