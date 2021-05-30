@@ -10,14 +10,13 @@ module.exports = (client, options) => {
 		desc: "Shows a help embed",
 		aliases: ["help"],
 		permissions: ["SEND_MESSAGES"],
-		usage: "!help <command?>",
 		category: "other",
 		argumentDescriptions: [
 			{
 				argument: "command",
 				desc: "The command to get information on",
-				optional: true,
-			},
+				optional: true
+			}
 		],
 		slashCommand: {
 			bool: options.slashCommand,
@@ -25,10 +24,10 @@ module.exports = (client, options) => {
 				{
 					name: "command",
 					description: "The command to get information on",
-					type: 3,
-					required: false,
-				},
-			],
+					type: "STRING",
+					required: false
+				}
+			]
 		},
 
 		/**
@@ -50,22 +49,13 @@ module.exports = (client, options) => {
 					command.args.push({
 						name: "",
 						fullName: "command",
-						type: "command",
+						type: "command"
 					});
 					command.argumentDescriptions.push({
 						argument: "command",
-						desc: "The command to get info on (optional).",
+						desc: "The command to get info on (optional)."
 					});
 				}
-
-				const cmdArgs = command.args
-					.map(
-						v =>
-							`<${getName(v)}${
-								find(v, command)?.optional ?? false ? "?" : ""
-							}>`
-					)
-					.join(" ");
 
 				embed
 					.setDescription(
@@ -75,18 +65,16 @@ module.exports = (client, options) => {
 						{
 							name: "Description",
 							value: command.desc || "No description provided.",
-							inline: false,
+							inline: false
 						},
 						{
 							name: "Arguments",
 							value:
 								[
-									`\`${
-										command.usage ||
-										`${client.prefix}${command.name}${
-											cmdArgs == "" ? "" : " " + cmdArgs
-										}`
-									}\`\n`,
+									`\`${client.getCommandUsage(
+										command,
+										message.guild
+									)}\`\n`,
 									...command.args.map(
 										v =>
 											`\`${getName(v)} (${v.type}${
@@ -100,9 +88,9 @@ module.exports = (client, options) => {
 													  "No description provided."
 													: "No description provided."
 											}`
-									),
+									)
 								].join("\n") || "None",
-							inline: false,
+							inline: false
 						},
 						{
 							name: "Types",
@@ -117,14 +105,14 @@ module.exports = (client, options) => {
 													]
 												}`
 										)
-									),
+									)
 								].join("\n") || "No arguments for this command",
-							inline: false,
+							inline: false
 						},
 						{
 							name: "Category",
 							value: FLC(command.category || "None"),
-							inline: true,
+							inline: true
 						},
 						{
 							name: "Permissions",
@@ -140,19 +128,19 @@ module.exports = (client, options) => {
 											: "Permissions Object"
 									)
 									.join(", ") || "None",
-							inline: true,
+							inline: true
 						},
 						{
 							name: "Slash Command",
 							value: command.slashCommand.bool
 								? "Enabled"
 								: "Disabled",
-							inline: true,
+							inline: true
 						},
 						{
 							name: "Aliases",
 							value: command.aliases.join(", ") || "None",
-							inline: true,
+							inline: true
 						},
 						{
 							name: "Subcommands",
@@ -163,7 +151,7 @@ module.exports = (client, options) => {
 									)
 									.map(s => `\`${s.name}\`: ${s.desc}`)
 									.join("\n") || "None",
-							inline: true,
+							inline: true
 						}
 					);
 			} else
@@ -178,7 +166,7 @@ module.exports = (client, options) => {
 								value: client.commands
 									.filter(v2 => v2.category == v)
 									.map(v2 => `\`${v2.name}\`: ${v2.desc}\n`)
-									.join(" "),
+									.join(" ")
 							};
 						})
 				);
@@ -189,7 +177,7 @@ module.exports = (client, options) => {
 			} catch {
 				message.reply(embed);
 			}
-		},
+		}
 	});
 };
 

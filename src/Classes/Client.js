@@ -45,6 +45,7 @@ const falsy = [
 module.exports = class Client extends Discord.Client {
 	/**
 	 * Define types for simplicity
+	 * @typedef {Discord.Collection<String | Discord.Guild, String> | [String | Discord.Guild, String][] | Map<String | Discord.Guild, String>} PrefixCollection
 	 * @typedef {Discord.MessageEmbedOptions & { slashCommand: Boolean }} HelpCmdStyle
 	 * @typedef {{token: String, prefix: String, discordConfig: Discord.ClientOptions}} Config
 	 * @typedef {{cmds: String, events: String, subs: String}} Paths
@@ -110,10 +111,32 @@ module.exports = class Client extends Discord.Client {
 		 */
 		this.commandCategories = new Array();
 
-		// Configs
-		this.prefix = config.prefix || "!";
-		this.clientOptions = bools;
+		// Add Discord
+		this.discord = Discord;
+
+		/**
+		 * The default prefix for the client
+		 * @type {String}
+		 */
+		this.defaultPrefix = config.prefix;
+		/**
+		 * The collection for guild prefixes
+		 * @type {Discord.Collection<String, String>}
+		 */
+		this.prefixes = new Discord.Collection();
+		/**
+		 * The boolean values passed into the client (bools)
+		 * @type {Bools}
+		 */
+		this.bools = bools;
+		/**
+		 * The paths to all handlers
+		 * @type {Paths}
+		 */
 		this.paths = paths;
+		/**
+		 * The modules passed into the client
+		 */
 		this.modules = modules;
 
 		// Add folders for the paths if they don't exist
@@ -172,7 +195,7 @@ module.exports = class Client extends Discord.Client {
 			// If the command is the help command it's the built in help command, stop it from deleting
 			if (
 				command.name == "help" &&
-				this.clientOptions.builtInHelpCommand != false
+				this.bools.builtInHelpCommand != false
 			)
 				return;
 
@@ -198,17 +221,26 @@ module.exports = class Client extends Discord.Client {
 		});
 
 		// Add built in help command if it's enabled
-		if (this.clientOptions.builtInHelpCommand != false) {
+		if (this.bools.builtInHelpCommand != false) {
 			// Create custom help command using options
-			const c = builtInHelpCommand(
-				this,
-				this.clientOptions.builtInHelpCommand
-			);
+			const c = builtInHelpCommand(this, this.bools.builtInHelpCommand);
 
 			// Set it in the collection
 			this.commands.set("help", c);
 			if (!this.commandCategories.includes(c.category))
 				this.commandCategories.push(c.category);
+
+			// Add args
+			const conversions = this.getParamNames(c.run);
+			c.args.push(
+				...conversions.map(v => {
+					return {
+						fullName: v.fullName,
+						name: v.name,
+						type: v.type?.name ?? "Not found"
+					};
+				})
+			);
 
 			// If there isn't a help slash command, add it
 			const cmd =
@@ -330,7 +362,7 @@ module.exports = class Client extends Discord.Client {
 						fileCommand.name
 					}" was attempted to be overwritten.${
 						fileCommand.name == "help" &&
-						this.clientOptions.builtInHelpCommand
+						this.bools.builtInHelpCommand
 							? `\n\nThis is due to the builtInHelpCommand not being false.`
 							: ""
 					}`
@@ -360,7 +392,7 @@ module.exports = class Client extends Discord.Client {
 			this.commands.set(fileCommand.name, fileCommand);
 
 			// Log the command
-			if (this.clientOptions.cmdLoadedMsg)
+			if (this.bools.cmdLoadedMsg)
 				console.log(`Command "${fileCommand.name.bold}" loaded.`.blue);
 
 			// Look for subcommands
@@ -396,7 +428,7 @@ module.exports = class Client extends Discord.Client {
 					);
 
 					// Log the subcommand
-					if (this.clientOptions.subLoadedMsg)
+					if (this.bools.subLoadedMsg)
 						console.log(
 							`Subcommand "${fileSubcommand.name.bold}" loaded for subcommand train "${fileSubcommand.parent.bold}".`
 								.green
@@ -410,7 +442,7 @@ module.exports = class Client extends Discord.Client {
 		const Interaction = require("./Interaction");
 
 		// If emitMessageOnInteraction then for each interaction, emit message with the Interaction
-		if (this.clientOptions.emitMessageOnInteraction)
+		if (this.bools.emitMessageOnInteraction)
 			this.ws.on("INTERACTION_CREATE", async interaction =>
 				this.emit(
 					"message",
@@ -419,7 +451,7 @@ module.exports = class Client extends Discord.Client {
 			);
 
 		// If debug is on, then do custom debugging
-		if (this.clientOptions.debug)
+		if (this.bools.debug)
 			this.on("debug", (...info) => {
 				info.forEach(i => {
 					if (typeof i == "string") {
@@ -466,16 +498,13 @@ module.exports = class Client extends Discord.Client {
 				}
 
 				// Log the event
-				if (this.clientOptions.eventLoadedMsg)
+				if (this.bools.eventLoadedMsg)
 					console.log(`Event "${fileEvent.name.bold}" loaded.`.red);
 			});
 
 		// Assign this the modules
 		Object.assign(this, this.modules);
 		modulesCount += Object.keys(this.modules).length;
-
-		// Add Discord
-		this.discord = Discord;
 
 		// Emit ready once the reloading is done
 		this.emit("ready");
@@ -486,9 +515,9 @@ module.exports = class Client extends Discord.Client {
 
 	/**
 	 * Check permissions considering members, roles, permissions, and custom properties
-	 * @param {Command | Subcommand} cmd - The command or subcommand with permissions
-	 * @param {Discord.GuildMember} member - The member to check permissions
-	 * @param {Object} data - Any specific roles that an unknown string should be attached to ex. MOD: ["Mod", "Admin", "Owner" (in Discord.RoleResolvable form)]
+	 * @param {Command | Subcommand} cmd The command or subcommand with permissions
+	 * @param {Discord.GuildMember} member The member to check permissions
+	 * @param {Object} data Any specific roles that an unknown string should be attached to ex. MOD: ["Mod", "Admin", "Owner" (in Discord.RoleResolvable form)]
 	 */
 	async checkPermissions(cmd, member, data = {}) {
 		// Convert data to an array
@@ -564,9 +593,9 @@ module.exports = class Client extends Discord.Client {
 
 	/**
 	 * Runs a command considering conversions
-	 * @param {Command | Subcommand} command
-	 * @param {Discord.Message} message
-	 * @param {String[]} args
+	 * @param {Command | Subcommand} command The command to run
+	 * @param {Discord.Message} message The message to get info to convert
+	 * @param {String[]} args The args to get info to convert
 	 */
 	async runCommand(command, message, args) {
 		// Get the conversions
@@ -664,7 +693,7 @@ module.exports = class Client extends Discord.Client {
 
 	/**
 	 * Get all parameters and conversions
-	 * @param {Function} func
+	 * @param {Function} func The function to get parameters
 	 * @returns {{name: String, fullName: String, type: any}[]}
 	 * @private
 	 */
@@ -717,10 +746,14 @@ module.exports = class Client extends Discord.Client {
 
 	/**
 	 * Get the command usage of a command, if it doesn't have one, format it with the arguments
-	 * @param {Command} command
+	 * @param {Command} command The command to get usage
+	 * @param {Discord.Guild} guild The guild to get prefix
 	 * @returns {String}
 	 */
-	getCommandUsage(command) {
+	getCommandUsage(command, guild = null) {
+		if (!command) return;
+		const prefix = this.prefix(guild);
+
 		const cmdArgs = command.args
 			.map(
 				v =>
@@ -731,10 +764,78 @@ module.exports = class Client extends Discord.Client {
 			.join(" ");
 		const usage =
 			command.usage ||
-			`${this.prefix}${command.name}${
-				cmdArgs == "" ? "" : " " + cmdArgs
-			}`;
+			`${prefix}${command.name}${cmdArgs == "" ? "" : " " + cmdArgs}`;
 		return usage;
+	}
+
+	/**
+	 * Fetches the prefix for a guild, if no guild is passed or no prefix for that guild, then return the default prefix
+	 * @param {Discord.Guild | String} guild The guild to get (id or guild)
+	 * @returns {String} The prefix
+	 */
+	prefix(guild = null) {
+		return guild
+			? typeof guild == "string"
+				? this.prefixes.get(guild) || this.defaultPrefix
+				: this.prefixes.get(guild.id) || this.defaultPrefix
+			: this.defaultPrefix;
+	}
+
+	/**
+	 * Load prefixes into the client, accepts any object, map, collection, array if it maps a guild's id to a prefix
+	 * @param {PrefixCollection[]} Ts The collection
+	 */
+	loadPrefixes(...Ts) {
+		Ts.forEach(T => {
+			if (T instanceof Discord.Collection) {
+				T.forEach((v, k) => {
+					if (typeof v != "string") return;
+					if (typeof k != "string" && !(k instanceof Discord.Guild))
+						return;
+					if (k instanceof Discord.Guild) {
+						this.prefixes.set(k.id, v);
+					} else {
+						this.prefixes.set(k, v);
+					}
+				});
+			} else if (T instanceof Array) {
+				T.forEach(i => {
+					const k = i[0],
+						v = i[1];
+					if (typeof v != "string") return;
+					if (typeof k != "string" && !(k instanceof Discord.Guild))
+						return;
+					if (k instanceof Discord.Guild) {
+						this.prefixes.set(k.id, v);
+					} else {
+						this.prefixes.set(k, v);
+					}
+				});
+			} else if (T instanceof Map) {
+				T.forEach((v, k) => {
+					if (typeof v != "string") return;
+					if (typeof k != "string" && !(k instanceof Discord.Guild))
+						return;
+					if (k instanceof Discord.Guild) {
+						this.prefixes.set(k.id, v);
+					} else {
+						this.prefixes.set(k, v);
+					}
+				});
+			} else if (typeof T == "object") {
+				Object.entries(T).forEach(i => {
+					const k = i[0],
+						v = i[1];
+					if (typeof v != "string" || typeof k != "string") return;
+					this.prefixes.set(k, v);
+				});
+			} else
+				throw Error(
+					"Fero-DC: loadPrefixes was not passed object, array, map, or collection."
+				);
+		});
+
+		return this.prefixes;
 	}
 };
 
