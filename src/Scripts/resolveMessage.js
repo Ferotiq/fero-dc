@@ -1,3 +1,5 @@
+/** @format */
+
 "use strict";
 
 module.exports = async (message, string) => {

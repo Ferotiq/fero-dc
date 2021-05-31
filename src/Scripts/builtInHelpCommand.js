@@ -1,3 +1,5 @@
+/** @format */
+
 "use strict";
 
 const Command = require("../Classes/Command.js"),

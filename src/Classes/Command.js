@@ -1,3 +1,5 @@
+/** @format */
+
 "use strict";
 
 const Discord = require("discord.js");
@@ -14,7 +16,7 @@ const SlashCommandOptionTypeEnum = {
 	USER: 6,
 	CHANNEL: 7,
 	ROLE: 8,
-	MENTIONABLE: 9,
+	MENTIONABLE: 9
 };
 
 module.exports = class Command {
@@ -60,7 +62,7 @@ module.exports = class Command {
 					if (typeof v.type == "string")
 						v.type = SlashCommandOptionTypeEnum[v.type];
 					return v;
-				}) ?? [],
+				}) ?? []
 		};
 
 		/**

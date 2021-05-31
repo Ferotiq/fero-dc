@@ -1,3 +1,5 @@
+/** @format */
+
 //"use strict"
 
 const Discord = require("discord.js"),
@@ -75,7 +77,7 @@ class Interaction {
 			users: new Array(),
 			members: new Array(),
 			channels: new Array(),
-			roles: new Array(),
+			roles: new Array()
 		};
 
 		if (interaction.data.resolved) {
@@ -132,7 +134,7 @@ class Interaction {
 			),
 			channels: new Discord.Collection(
 				this.resolved.channels.map(v => [v.id, v])
-			),
+			)
 		};
 	}
 
@@ -165,14 +167,14 @@ class Interaction {
 		await this.client.api.interactions(this.id, this.token).callback.post({
 			data: {
 				data: {
-					content: pendingResponse,
+					content: pendingResponse
 				},
 				type: 5,
 				query: {
-					wait: true,
+					wait: true
 				},
-				auth: false,
-			},
+				auth: false
+			}
 		});
 		return await oR(this);
 	}
@@ -198,7 +200,7 @@ class Interaction {
 		const member = await this.guild.members.fetch({
 			force: true,
 			cache: true,
-			user: this.author.id,
+			user: this.author.id
 		});
 		this.member = member;
 		return this;
@@ -222,7 +224,7 @@ class Interaction {
 			.webhooks(this.client.user.id, this.token)
 			.post({
 				data,
-				files,
+				files
 			});
 		return new Discord.Message(
 			this.client,
@@ -239,8 +241,8 @@ class Interaction {
 			data: {
 				data,
 				type: 4,
-				files,
-			},
+				files
+			}
 		});
 		return await oR(this);
 	}

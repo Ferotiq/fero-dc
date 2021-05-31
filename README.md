@@ -1,3 +1,5 @@
+<!-- @format -->
+
 # Quick Description
 
 fero-dc is short for Ferotiq Discord Client

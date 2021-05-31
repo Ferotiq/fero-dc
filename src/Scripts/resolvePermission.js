@@ -1,3 +1,5 @@
+/** @format */
+
 "use strict";
 
 const Discord = require("discord.js");
@@ -34,7 +36,7 @@ module.exports = async string => {
 		"MANAGE_NICKNAMES",
 		"MANAGE_ROLES",
 		"MANAGE_WEBHOOKS",
-		"MANAGE_EMOJIS",
+		"MANAGE_EMOJIS"
 	];
 
 	if (!isNaN(string)) return new Discord.Permissions(parseInt(string));
