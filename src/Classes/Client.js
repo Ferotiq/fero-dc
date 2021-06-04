@@ -4,7 +4,7 @@
 
 // Imports
 const Discord = require("discord.js"),
-	disbut = require("discord-buttons"),
+	discordButtons = require("discord-buttons"),
 	fs = require("fs"),
 	path = require("path"),
 	colors = require("colors"),
@@ -91,7 +91,7 @@ module.exports = class Client extends Discord.Client {
 		// Initiate Discord Client
 		super(config);
 
-		disbut(this);
+		this.disbut = discordButtons(this);
 
 		// Collections for the Handlers
 		/**
