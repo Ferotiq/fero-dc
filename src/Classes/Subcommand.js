@@ -2,9 +2,19 @@
 
 "use strict";
 
+const Discord = require("discord.js"),
+	Client = require("./Client.js");
+
+/**
+ * @param {Discord.Message} message
+ * @param {String[]} args
+ * @param {Client} client
+ */
+ function RunFunction(message, args, client, ...extra = []) {}
+
 module.exports = class Subcommand {
 	/**
-	 * @typedef {{name: String, desc: String, aliases: String[], permissions: Discord.Permissions[] | String[], parent: String, usage: String, run: Function}} SubcommandOptions
+	 * @typedef {{name: String, desc: String, aliases: String[], permissions: Discord.Permissions[] | String[], parent: String, usage: String, run: RunFunction}} SubcommandOptions
 	 */
 
 	/**
@@ -31,8 +41,6 @@ module.exports = class Subcommand {
 
 		this.usage = options.usage || "";
 
-		const noFunctionSet = () => {};
-
-		this.run = options.run || noFunctionSet;
+		this.run = options.run;
 	}
 };

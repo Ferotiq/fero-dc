@@ -31,16 +31,18 @@ const stripComments =
 		"false",
 		"0",
 		"0n",
-		"null",
 		"undefined",
 		"NaN",
 		"",
 		"no",
 		"off",
-		null,
 		undefined
 	];
 
+/**
+ * @classdesc A built-on version of the standard Discord.js Client
+ * @class
+ */
 module.exports = class Client extends Discord.Client {
 	/**
 	 * Define types for simplicity
@@ -57,8 +59,6 @@ module.exports = class Client extends Discord.Client {
 	 * @param {Paths} paths - Paths to the Commands, Subcommands, and Events folders
 	 * @param {Object} modules - Stores modules/data that is requested to be stored in the client (key-value pairs)
 	 * @extends {Discord.Client}
-	 * @classdesc A built-on version of the standard Discord.js Client
-	 * @class
 	 */
 	constructor(
 		config = {
@@ -91,7 +91,7 @@ module.exports = class Client extends Discord.Client {
 		// Initiate Discord Client
 		super(config);
 
-		this.disbut = discordButtons(this);
+		//this.disbut = discordButtons(this);
 
 		// Collections for the Handlers
 		/**
@@ -208,13 +208,39 @@ module.exports = class Client extends Discord.Client {
 
 			// Check if there is a command with a matching alias and has slashCommand turned on
 			const c = commands.find(file => {
-				const cmd = require(`${this.paths.cmds}/${file}`);
-				return (
-					cmd.aliases
-						.map(a => a.toLowerCase())
-						.includes(command.name.toLowerCase()) &&
-					cmd.slashCommand.bool
-				);
+				if (file.endsWith(".js")) {
+					/**
+					 * @type {Command}
+					 */
+					const cmd = require(path.join(this.paths.cmds, file));
+					return (
+						cmd.aliases
+							.map(a => a.toLowerCase())
+							.includes(command.name.toLowerCase()) &&
+						cmd.slashCommand.bool
+					);
+				} else {
+					const cmdExists = fs
+						.readdirSync(path.join(this.paths.cmds, file))
+						.find(f => {
+							/**
+							 * @type {Command}
+							 */
+							const cmd2 = require(path.join(
+								this.paths.cmds,
+								file,
+								f
+							));
+							return (
+								cmd2.aliases
+									.map(a => a.toLowerCase())
+									.includes(command.name.toLowerCase()) &&
+								cmd2.slashCommand.bool
+							);
+						});
+					if (!cmdExists) return undefined;
+					return require(path.join(this.paths.cmds, file, cmdExists));
+				}
 			});
 
 			// If there isn't, delete the command
@@ -280,10 +306,13 @@ module.exports = class Client extends Discord.Client {
 		}
 
 		const loadCommand = (file, folder = null) => {
+			// Get the path
+			const p = folder
+				? path.join(this.paths.cmds, folder, file)
+				: path.join(this.paths.cmds, file);
+
 			// Import the file
-			const fileCommand = require(`${this.paths.cmds}${
-				folder ? `/${folder}` : ""
-			}/${file}`);
+			const fileCommand = require(p);
 
 			// If the file isn't of type "Command" return
 			if (!(fileCommand instanceof Command)) return;
@@ -681,8 +710,8 @@ module.exports = class Client extends Discord.Client {
 		int: string => parseInt(string),
 		float: string => parseFloat(string),
 		double: string => parseFloat(string),
-		boolean: string => !falsy.includes(string),
-		bool: string => !falsy.includes(string),
+		boolean: string => (string == null ? null : !falsy.includes(string)),
+		bool: string => (string == null ? null : !falsy.includes(string)),
 		color: string => Discord.Util.resolveColor(string),
 		guild: string => this.guilds.cache.get(string),
 		member: async (string, message) =>

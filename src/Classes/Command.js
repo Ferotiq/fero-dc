@@ -2,7 +2,9 @@
 
 "use strict";
 
-const Discord = require("discord.js");
+const Discord = require("discord.js"),
+	Client = require("./Client.js");
+const Subcommand = require("./Subcommand.js");
 
 /**
  * @enum {Number}
@@ -19,6 +21,13 @@ const SlashCommandOptionTypeEnum = {
 	MENTIONABLE: 9
 };
 
+/**
+ * @param {Discord.Message} message
+ * @param {String[]} args
+ * @param {Client} client
+ */
+function RunFunction(message, args, client, ...conversions = []) {}
+
 module.exports = class Command {
 	/**
 	 * @typedef {"SUB_COMMAND" | "SUB_COMMAND_GROUP" | "STRING" | "INTEGER" | "BOOLEAN" | "USER" | "CHANNEL" | "ROLE" | "MENTIONABLE"} SlashCommandOptionType
@@ -27,7 +36,7 @@ module.exports = class Command {
 	 * @typedef {{argument: String, desc: String, optional?: Boolean}} ArgumentDescription
 	 * @typedef {{fullName: String, name: String, type: String}} Argument
 	 * @typedef {{bool: Boolean, options?: SlashCommandOption[]}} SlashCommand
-	 * @typedef {{name: String, desc: String, aliases: String[], permissions: Discord.PermissionResolvable[], usage: String, category: String, slashCommand: SlashCommand, argumentDescriptions?: ArgumentDescription[], run: Function}} CommandOptions
+	 * @typedef {{name: String, desc: String, aliases: String[], permissions: Discord.PermissionResolvable[], usage: String, category: String, slashCommand: SlashCommand, argumentDescriptions?: ArgumentDescription[], run: RunFunction}} CommandOptions
 	 */
 
 	/**
@@ -77,8 +86,6 @@ module.exports = class Command {
 		 */
 		this.args = new Array();
 
-		const noFunctionSet = () => {};
-
-		this.run = options.run || noFunctionSet;
+		this.run = options.run;
 	}
 };

@@ -1,6 +1,6 @@
 {
 	"_from": "fero-dc",
-	"_id": "fero-dc@1.5.6",
+	"_id": "fero-dc@1.6.0",
 	"_inBundle": false,
 	"_integrity": "sha512-GoK1jHb9XWmmWmSg2rcCLESuSGueA+HHBi4wI2ssy8RVLBjAUxYz6NViLGpRviSY4BpKXSbqOngEk2IsqtOfaw==",
 	"_location": "/fero-dc",
@@ -27,7 +27,7 @@
 		"#USER",
 		"/"
 	],
-	"_resolved": "https://registry.npmjs.org/fero-dc/-/fero-dc-1.5.6.tgz",
+	"_resolved": "https://registry.npmjs.org/fero-dc/-/fero-dc-1.6.0.tgz",
 	"_shasum": "7fe38395f3e6ef0469f706a5e3ac7de217b5f26d",
 	"_spec": "fero-dc",
 	"author": {
@@ -41,6 +41,7 @@
 	"bundleDependencies": false,
 	"dependencies": {
 		"colors": "^1.4.0",
+		"discord-buttons": "^3.1.1",
 		"discord-slash-commands-client": "^1.1.1",
 		"discord.js": "^12.5.3",
 		"fero-ms": "^1.0.2"
@@ -55,7 +56,7 @@
 		"type": "git",
 		"url": "git+https://github.com/Ferotiq/fero-dc.git"
 	},
-	"version": "1.5.6",
+	"version": "1.6.0",
 	"keywords": [
 		"ferotiq",
 		"discord.js",
@@ -65,8 +66,5 @@
 		"advanced client",
 		"advanced discord.js client",
 		"discord"
-	],
-	"devDependencies": {
-		"discord-buttons": "^2.4.1"
-	}
+	]
 }
